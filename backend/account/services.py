@@ -2,6 +2,8 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from account.models import User
 
+
+
 # signup 
 def register_user(*, full_name, email, password):
     user = User.objects.create_user(
@@ -36,3 +38,20 @@ def logout_user(*, refresh_token):
         token.blacklist()
     except Exception:
         pass
+
+# refresh token
+
+
+def refresh_user_token(*, refresh_token):
+    refresh = RefreshToken(refresh_token)
+
+    user_id = refresh["user_id"]
+    user = User.objects.get(id=user_id)
+
+    access_token = refresh.access_token
+
+    new_refresh = RefreshToken.for_user(user)
+
+    refresh.blacklist()
+
+    return access_token, new_refresh
