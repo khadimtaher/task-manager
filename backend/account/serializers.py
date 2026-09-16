@@ -1,8 +1,6 @@
 from rest_framework import serializers
 
 # Signup
-
-
 class RegisterSerializer(serializers.Serializer):
 
     full_name = serializers.CharField(max_length=100)
@@ -16,7 +14,7 @@ class RegisterSerializer(serializers.Serializer):
         write_only=True
     )
 
-    def validate(self, value):
+    def validate_email(self, value):
         from account.models import User
 
         if User.objects.filter(email=value).exists():
@@ -25,6 +23,8 @@ class RegisterSerializer(serializers.Serializer):
             )
 
         return value.lower()
+
+    
 
     def validate(self, value):
         if value["password"] != value["confirm_password"]:

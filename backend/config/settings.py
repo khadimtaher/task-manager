@@ -47,6 +47,7 @@ EXTERNAL_APPS = [
     "corsheaders",
     "rest_framework_simplejwt.token_blacklist",
     "account",
+    "task",
 ]
 INSTALLED_APPS += EXTERNAL_APPS
 
