@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from account.serializers import (
     RegisterSerializer,
@@ -9,7 +10,10 @@ from account.serializers import (
 from account.services import (
     register_user,
     login_user,
+    logout_user
 )
+
+# signup views
 
 
 class RegisterView(APIView):
@@ -36,6 +40,9 @@ class RegisterView(APIView):
             },
             status=status.HTTP_201_CREATED
         )
+
+# login views
+
 
 class LoginView(APIView):
 
@@ -73,6 +80,10 @@ class LoginView(APIView):
                     "id": user.id,
                     "full_name": user.full_name,
                     "email": user.email,
+                },
+                "tokens": {
+                    "access_token": str(access_token),
+                    "refresh_token": str(refresh),
                 }
             },
             status=status.HTTP_200_OK
@@ -95,5 +106,33 @@ class LoginView(APIView):
             samesite="Lax",
             max_age=7 * 24 * 60 * 60,
         )
+
+        return response
+
+# logout views
+
+
+class LogoutView(APIView):
+
+    permission_classes = []
+
+    def post(self, request):
+
+        refresh_token = request.COOKIES.get("refresh_token")
+
+        if refresh_token:
+            logout_user(
+                refresh_token=refresh_token
+            )
+
+        response = Response(
+            {
+                "message": "Logout successful."
+            },
+            status=status.HTTP_200_OK
+        )
+
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
 
         return response
