@@ -177,6 +177,22 @@ REST_FRAMEWORK = {
 
 }
 
+# Redis config 
+TASK_CACHE_TIMEOUT = int(
+    os.getenv("TASK_CACHE_TIMEOUT", "60")
+)
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": True,
+        },
+    }
+}
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
