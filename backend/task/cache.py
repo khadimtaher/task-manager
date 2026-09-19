@@ -1,29 +1,33 @@
 import hashlib
 import json
 from uuid import uuid4
+import logging
 
 from django.conf import settings
 from django.core.cache import cache
+from redis.exceptions import RedisError
 
+logger = logging.getLogger(__name__)
 
 CACHE_VERSION_KEY = "tasks:cache-version:user:{user_id}"
 
 
 def get_task_cache_version(user_id):
     key = CACHE_VERSION_KEY.format(user_id=user_id)
+    try:
+        # cache.get_or_set can raise exceptions if Redis is down and IGNORE_EXCEPTIONS isn't fully caught
+        version = cache.get(key)
+        if not version:
+            version = uuid4().hex
+            cache.set(key, version, timeout=None)
+        return version
+    except (RedisError, Exception) as e:
+        logger.warning(f"Redis down, falling back for cache version: {e}")
+        # Fallback return value so app doesn't crash
+        return uuid4().hex
 
-    return cache.get_or_set(
-        key,
-        uuid4().hex,
-        timeout=None,
-    )
 
-
-def build_task_list_cache_key(
-    *,
-    user_id,
-    query_params,
-):
+def build_task_list_cache_key(*, user_id, query_params):
     version = get_task_cache_version(user_id)
 
     relevant_params = {
@@ -54,21 +58,22 @@ def build_task_list_cache_key(
 
 def invalidate_task_cache(user_id):
     key = CACHE_VERSION_KEY.format(user_id=user_id)
-
-    cache.set(
-        key,
-        uuid4().hex,
-        timeout=None,
-    )
+    try:
+        cache.set(key, uuid4().hex, timeout=None)
+    except (RedisError, Exception) as e:
+        logger.warning(f"Redis down during invalidation: {e}")
 
 
 def get_cached_task_list(cache_key):
-    return cache.get(cache_key)
+    try:
+        return cache.get(cache_key)
+    except (RedisError, Exception):
+        return None  # Treat as cache miss, fallback to DB
 
 
 def set_cached_task_list(cache_key, data):
-    cache.set(
-        cache_key,
-        data,
-        timeout=settings.TASK_CACHE_TIMEOUT,
-    )
+    try:
+        cache.set(cache_key, data, timeout=getattr(
+            settings, 'TASK_CACHE_TIMEOUT', 300))
+    except (RedisError, Exception) as e:
+        logger.warning(f"Redis down during set cache: {e}")

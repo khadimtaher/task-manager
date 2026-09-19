@@ -69,6 +69,8 @@ AUTH_USER_MODEL = "account.User"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173"
 ]
+CORS_ALLOW_CREDENTIALS = True
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -177,6 +179,24 @@ REST_FRAMEWORK = {
 
 }
 
+# password validation config
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        },
+    },
+    {
+        # Number check karta hai
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+]
+
 # Redis config 
 TASK_CACHE_TIMEOUT = int(
     os.getenv("TASK_CACHE_TIMEOUT", "60")
@@ -190,6 +210,13 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "IGNORE_EXCEPTIONS": True,
+
+            "SOCKET_CONNECT_TIMEOUT": 0.01,
+            "SOCKET_TIMEOUT": 0.01,
+
+            "CONNECTION_POOL_KWARGS": {
+                "retry_on_timeout": False,
+            },
         },
     }
 }
