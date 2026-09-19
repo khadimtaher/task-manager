@@ -1,22 +1,17 @@
-import { useEffect } from "react";
-import apiClient from "./api/client";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import Signup from "./pages/signup/signup";
 
 function App() {
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await apiClient.get("/tasks/");
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/signup" replace />} />
 
-        console.log("Tasks API Response:", response.data);
-      } catch (error) {
-        console.error("Tasks API Error:", error);
-      }
-    };
-
-    fetchTasks();
-  }, []);
-
-  return <h1>Task Manager</h1>;
+        <Route path="/signup" element={<Signup />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
